@@ -64,10 +64,10 @@ while True:
     kernel = np.ones((5,3), np.uint8)
     D1 = cv2.dilate(C, kernel)
     
-    kernel = np.ones((1,3), np.uint8)
+    kernel = np.ones((2,3), np.uint8)
     E = cv2.erode(D1, kernel)
 
-    kernel = np.ones((7,4), np.uint8)
+    kernel = np.ones((7,5), np.uint8)
     D = cv2.dilate(E, kernel)
 
     # connected components with statistics
@@ -77,7 +77,8 @@ while True:
     foots = list()
     for i in range(1, n):
         alpha = stats[i][1] / output_size[1]
-        if stats[i][3] > 90 - 60*alpha: # height of CP 
+        # if stats[i][3] > 120 - 90*alpha: # height of CP 
+        if stats[i][4] > 600 - 300*(alpha**2): # area of CP
             x = stats[i][0] + stats[i][2]//2
             y = stats[i][1] + int(1*stats[i][3])
             foots.append((x, y))
@@ -99,7 +100,7 @@ while True:
     cv2.imshow('2D_field', F_circle)
 
 
-    key = cv2.waitKey(mspf//10) 
+    key = cv2.waitKey(mspf//15) 
 
     if key & 0xFF == ord('q'): 
         break
