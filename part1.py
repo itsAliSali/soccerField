@@ -33,7 +33,10 @@ output_size = (F.shape[1], F.shape[0])
 
 # craeting background subtractor:
 # backSub = cv2.createBackgroundSubtractorMOG2(100, 100, True)
-backSub = cv2.createBackgroundSubtractorKNN(100, 1000, True)
+backSub = cv2.createBackgroundSubtractorKNN(100, 1000, True) # history, treshold, detect_shadow
+
+# kernel used for closing:
+kernel = np.ones((20,2),np.uint8)
 
 num_frames = 0
 t = time.time()
@@ -41,22 +44,58 @@ while True:
     
     # Capture frame-by-frame
     ret, I = cap.read()
-    
+    # I = cv2.GaussianBlur(I, (5, 3), 0)
+
     if ret == False: # end of video (perhaps)
         break
     num_frames += 1
 
     # project the video to the field coordinate.
     J = cv2.warpPerspective(I, H, output_size)
-    
+    # J = cv2.GaussianBlur(J, (3, 1), 0)
     # apply BGS:
-    fgMask = backSub.apply(J)
+    fgMask = backSub.apply(J) # [0, 127, 255]
+    fgMask = np.uint8(fgMask > 127) * 255
+    
+    # # closing
+    kernel = np.ones((3,3), np.uint8)
+    C = cv2.morphologyEx(fgMask, cv2.MORPH_CLOSE, kernel)
+
+    kernel = np.ones((5,3), np.uint8)
+    D1 = cv2.dilate(C, kernel)
+    
+    kernel = np.ones((1,3), np.uint8)
+    E = cv2.erode(D1, kernel)
+
+    kernel = np.ones((7,4), np.uint8)
+    D = cv2.dilate(E, kernel)
+
+    # connected components with statistics
+    n, _, stats, _ = cv2.connectedComponentsWithStats(D)
+
+    # Top = np.zeros(output_size, dtype=np.uint8)
+    foots = list()
+    for i in range(1, n):
+        alpha = stats[i][1] / output_size[1]
+        if stats[i][3] > 90 - 60*alpha: # height of CP 
+            x = stats[i][0] + stats[i][2]//2
+            y = stats[i][1] + int(1*stats[i][3])
+            foots.append((x, y))
+
+    for f in foots:
+        cv2.circle(J, f, 3, [0,0,255], 5)
+        
     
     # Display I, J
-    # cv2.imshow('win1', I)
-    # cv2.imshow('win2', J)
-    cv2.imshow('win3', fgMask)
+    cv2.imshow('win1', I)
+    cv2.imshow('win2', J)
+    cv2.imshow('fgmask', fgMask)
+    cv2.imshow('Closing(fg)', C)
+    # cv2.imshow('openning(fg)', O)
+    cv2.imshow('erode(C)', E)
+    cv2.imshow('dilate(E)', D)
     
+
 
     key = cv2.waitKey(mspf//10) 
 
