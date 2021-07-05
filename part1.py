@@ -81,8 +81,10 @@ while True:
             x = stats[i][0] + stats[i][2]//2
             y = stats[i][1] + int(1*stats[i][3])
             foots.append((x, y))
-
+    
+    F_circle = np.array(F)
     for f in foots:
+        cv2.circle(F_circle, f, 3, [0,0,255], 5)
         cv2.circle(J, f, 3, [0,0,255], 5)
         
     
@@ -94,7 +96,7 @@ while True:
     # cv2.imshow('openning(fg)', O)
     cv2.imshow('erode(C)', E)
     cv2.imshow('dilate(E)', D)
-    
+    cv2.imshow('2D_field', F_circle)
 
 
     key = cv2.waitKey(mspf//10) 
