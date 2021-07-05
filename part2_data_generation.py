@@ -40,13 +40,17 @@ while True:
                 
                 color = "idk"
                 hsv = cv2.cvtColor(ppatch, cv2.COLOR_BGR2HSV)
-                lr = np.array([0,0,0])
+                lr = np.array([0,10,10])
                 ur = np.array([25,255,255])
                 lb = np.array([85,0,0])
                 ub = np.array([120,255,255])
                 mask1 = cv2.inRange(hsv, lr, ur)
                 mask2 = cv2.inRange(hsv, lb, ub)
-                if np.sum(mask1 == 255) > np.sum(mask2 == 255):
+                ms1 = np.sum(mask1 == 255)
+                ms2 = np.sum(mask2 == 255)
+                if ms1<20 and ms2<20:
+                    break
+                if ms1 > ms2:
                     color = "r"
                 else:
                     color = 'b'
