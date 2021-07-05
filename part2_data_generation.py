@@ -37,7 +37,21 @@ while True:
             alpha = stats[i][1] / utils.output_size[1]
             if stats[i][4] > 500 - 300*(alpha**2): # area of CP
                 ppatch = proj_img[stats[i][1]:stats[i][1]+stats[i][3] ,stats[i][0]:stats[i][0]+stats[i][2]]
-                print(cv2.imwrite(f'./data/{num_frames}_{i}.jpg', ppatch)       )
+                
+                color = "idk"
+                hsv = cv2.cvtColor(ppatch, cv2.COLOR_BGR2HSV)
+                lr = np.array([0,0,0])
+                ur = np.array([25,255,255])
+                lb = np.array([85,0,0])
+                ub = np.array([120,255,255])
+                mask1 = cv2.inRange(hsv, lr, ur)
+                mask2 = cv2.inRange(hsv, lb, ub)
+                if np.sum(mask1 == 255) > np.sum(mask2 == 255):
+                    color = "r"
+                else:
+                    color = 'b'
+
+                print(cv2.imwrite(f'./data/{num_frames}_{i}_{color}.jpg', ppatch)       )
             
     # Display some images
     cv2.imshow('win1', I)
