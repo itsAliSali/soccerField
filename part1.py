@@ -7,7 +7,7 @@ import time
 
 # reading fiel img:
 F = cv2.imread('../2D_field.png')
-cv2.imshow('field', F)
+# cv2.imshow('field', F)
 
 # create a VideoCapture object
 cap = cv2.VideoCapture('../output.mp4')
@@ -31,6 +31,10 @@ points2 = np.array([(156, 168),
 H = cv2.getPerspectiveTransform(points2, points1)
 output_size = (F.shape[1], F.shape[0])
 
+# craeting background subtractor:
+# backSub = cv2.createBackgroundSubtractorMOG2(100, 100, True)
+backSub = cv2.createBackgroundSubtractorKNN(100, 1000, True)
+
 num_frames = 0
 t = time.time()
 while True:
@@ -45,11 +49,16 @@ while True:
     # project the video to the field coordinate.
     J = cv2.warpPerspective(I, H, output_size)
     
+    # apply BGS:
+    fgMask = backSub.apply(J)
+    
     # Display I, J
-    cv2.imshow('win1', I)
-    cv2.imshow('win2', J)
+    # cv2.imshow('win1', I)
+    # cv2.imshow('win2', J)
+    cv2.imshow('win3', fgMask)
+    
 
-    key = cv2.waitKey(mspf//3) 
+    key = cv2.waitKey(mspf//10) 
 
     if key & 0xFF == ord('q'): 
         break
