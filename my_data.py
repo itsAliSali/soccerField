@@ -46,17 +46,24 @@ class SoccerFieldDataset(Dataset):
 
 if __name__ == "__main__":
     
+    import random 
+    import matplotlib.pyplot as plt
+
     ds = SoccerFieldDataset('./data/dataset/train/')
 
     print(ds.__len__())
 
-    d0 = ds.__getitem__(0)
-    d1 = ds.__getitem__(175)
-    d2 = ds.__getitem__(187)
+    # d0, l0 = ds.__getitem__(0)
+    # d1, l1 = ds.__getitem__(175)
+    # d2, l2 = ds.__getitem__(187)
 
-    cv2.imshow('0', d0['img'])
-    cv2.imshow('175', d1['img'])
-    cv2.imshow('187', d2['img'])
+    f, ax = plt.subplots(4,5)
 
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()    
+    for i in range(20):
+        idx = random.randint(0, ds.__len__())
+        img, lbl = ds.__getitem__(idx)
+        ax[i//5,i%5].imshow(img)
+        ax[i//5,i%5].title.set_text(f'{lbl}')
+        ax[i//5,i%5].axis('off')
+    
+    plt.show()

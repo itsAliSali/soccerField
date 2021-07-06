@@ -30,12 +30,14 @@ class Net(nn.Module):
         x = F.sigmoid(self.fc3(x).to(device))
         return x
 
-if __name__ == "__main__":
-    transform = transforms.Compose(
-        [transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-    batch_size = 4
+transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+
+
+if __name__ == "__main__":
+   
+
+    batch_size = 10
 
     trainset = ds.SoccerFieldDataset('./data/dataset/train/', transform=transform)
 
@@ -55,10 +57,10 @@ if __name__ == "__main__":
 
     # criterion = nn.CrossEntropyLoss()
     criterion = nn.MSELoss()
-    optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+    optimizer = optim.SGD(net.parameters(), lr=0.01, momentum=0.9)
 
 
-    for epoch in range(8):  # loop over the dataset multiple times
+    for epoch in range(10):  # loop over the dataset multiple times
 
         # training
         loss_train = 0.0

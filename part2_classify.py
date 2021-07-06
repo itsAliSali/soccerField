@@ -7,12 +7,13 @@ import torch
 
 
 import utils
-from train_nn import Net
+from train_nn import Net, transform, device
 
 
-net = Net()
-net.load_state_dict(torch.load("./model2021-07-06 17:44:22.614611.idk"))
+net = Net().double().to(device)
+net.load_state_dict(torch.load("./model2021-07-06 19:23:16.549593.idk"))
 net.eval()
+
 
 # create a VideoCapture object
 cap = cv2.VideoCapture('../output.mp4')
@@ -39,13 +40,37 @@ while True:
 
     # apply connected components Alg and find foot position:
     n, stats = utils.CP_analysis(preproc_img)
-    foots = utils.get_circle_centers(n, stats)
+    foots = []
+    for i in range(1, n):
+        alpha = stats[i][1] / utils.output_size[1]
+        if stats[i][4] > 500 - 300*(alpha**2): # area of CP
+            ppatch = proj_img[stats[i][1]:stats[i][1]+stats[i][3] ,stats[i][0]:stats[i][0]+stats[i][2]]
+            cv2.imshow("ppatch", ppatch)
+            ppatch = cv2.resize(ppatch, (50, 100))
+            ppatch = np.float64(ppatch)/255.0
+            ppatch = transform(ppatch)
+            ppatch = ppatch.reshape(1, 100, 50, 3)
+            ppatch = ppatch.permute(0, 3, 1, 2).double().to(device)
+            output = net(ppatch)
+            print(output)
+            x = stats[i][0] + stats[i][2]//2
+            y = stats[i][1] + stats[i][3]
+            if output > 0.7:
+                color = [255, 0, 0]
+                foots.append({'pos': (x, y), 'color': color})
 
+            elif output < 0.3:
+                color = [0, 0, 255]
+                foots.append({'pos': (x, y), 'color': color})
+            else:
+                color = [0, 255, 0]
+                foots.append({'pos': (x, y), 'color': color})
+        
     # draw circles on foot steps:
     F_circle = np.array(utils.F)
     for f in foots:
-        cv2.circle(F_circle, f, 3, [0,0,255], 5)
-        cv2.circle(proj_img, f, 3, [0,0,255], 5)
+        cv2.circle(F_circle, f['pos'], 3, f['color'], 5)
+        cv2.circle(proj_img, f['pos'], 3, f['color'], 5)
         
     
     # Display some images
@@ -54,7 +79,7 @@ while True:
     cv2.imshow('dilate(E)', preproc_img)
     cv2.imshow('2D_field', F_circle[::2, ::2])
 
-    key = cv2.waitKey(mspf//15+3) 
+    key = cv2.waitKey(1) 
 
     if key & 0xFF == ord('q'): 
         break
@@ -63,5 +88,5 @@ while True:
 print("#frames: " + str(num_frames) + " elapsed time: " + str(time.time() - t))
 cap.release()
 cv2.destroyAllWindows()
-
+torch.cuda.empty_cache()
 
