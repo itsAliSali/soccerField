@@ -1,9 +1,10 @@
 import os
 import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 import cv2
 import numpy as np
 import glob
+
 
 class SoccerFieldDataset(Dataset):
     def __init__(self, root_dir, transform=None):
@@ -31,13 +32,15 @@ class SoccerFieldDataset(Dataset):
 
         image = cv2.imread(img_path)
         image = cv2.resize(image, (50, 100))
-
-        sample = {'img': image, 'tag': label}
+        image = np.float64(image /255)
+        # image = torch.from_numpy(image).long()
+        
+        # sample = {'image': image, 'tag': label}
 
         if self.transform:
-            sample = self.transform(sample)
+            sample = self.transform(image)
 
-        return sample
+        return image, label
 
 
 
