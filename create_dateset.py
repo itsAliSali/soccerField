@@ -22,7 +22,7 @@ for i in range(round(train_test_ratio*len(players)), len(players)):
 
 # renaming files --> idx_0/1.jpg. (r: 0, b: 1)
 train = glob.glob("./data/dataset/train/*.jpg")
-idx = 1
+idx = 0
 for t in train:
     if t[-6:] == "_r.jpg":
         os.system(f'mv {t} ./data/dataset/train/{idx}_0.jpg')
@@ -31,7 +31,7 @@ for t in train:
     idx += 1    
 
 test = glob.glob("./data/dataset/test/*.jpg")
-idx = 1
+idx = 0
 for t in test:
     if t[-6:] == "_r.jpg":
         os.system(f'mv {t} ./data/dataset/test/{idx}_0.jpg')
