@@ -11,9 +11,10 @@ from train_nn import Net, transform, device
 
 
 net = Net().double().to(device)
-net.load_state_dict(torch.load("./model2021-07-06 19:23:16.549593.idk"))
+net.load_state_dict(torch.load("./model2021-07-06 22:28:34.020413.idk"))
 net.eval()
-
+# torch.no_grad()
+        
 
 # create a VideoCapture object
 cap = cv2.VideoCapture('../output.mp4')
@@ -47,18 +48,19 @@ while True:
             ppatch = proj_img[stats[i][1]:stats[i][1]+stats[i][3] ,stats[i][0]:stats[i][0]+stats[i][2]]
             cv2.imshow("ppatch", ppatch)
             ppatch = cv2.resize(ppatch, (50, 100))
-            ppatch = np.float64(ppatch)/255.0
+            cv2.imshow("RRppatch", ppatch)
+            ppatch = np.float64(ppatch/255)
             ppatch = transform(ppatch)
-            ppatch = ppatch.reshape(1, 100, 50, 3)
-            ppatch = ppatch.permute(0, 3, 1, 2).double().to(device)
+            ppatch = ppatch.reshape(1, 3, 100, 50).double().to(device)
+            # ppatch = ppatch.permute(0, 3, 1, 2).double().to(device)
+            # print(ppatch)
             output = net(ppatch)
-            print(output)
+            # print(output)
             x = stats[i][0] + stats[i][2]//2
             y = stats[i][1] + stats[i][3]
             if output > 0.7:
                 color = [255, 0, 0]
                 foots.append({'pos': (x, y), 'color': color})
-
             elif output < 0.3:
                 color = [0, 0, 255]
                 foots.append({'pos': (x, y), 'color': color})
@@ -76,7 +78,7 @@ while True:
     # Display some images
     cv2.imshow('win1', I)
     cv2.imshow('win2', proj_img)
-    cv2.imshow('dilate(E)', preproc_img)
+    # cv2.imshow('dilate(E)', preproc_img)
     cv2.imshow('2D_field', F_circle[::2, ::2])
 
     key = cv2.waitKey(1) 

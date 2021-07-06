@@ -32,13 +32,13 @@ class SoccerFieldDataset(Dataset):
 
         image = cv2.imread(img_path)
         image = cv2.resize(image, (50, 100))
-        image = np.float64(image /255)
+        image = np.float64(image/255)
         # image = torch.from_numpy(image).long()
         
         # sample = {'image': image, 'tag': label}
 
         if self.transform:
-            sample = self.transform(image)
+            image = self.transform(image)
 
         return image, label
 
@@ -49,7 +49,14 @@ if __name__ == "__main__":
     import random 
     import matplotlib.pyplot as plt
 
-    ds = SoccerFieldDataset('./data/dataset/train/')
+    from train_nn import Net, transform, device
+
+
+    net = Net().double().to(device)
+    net.load_state_dict(torch.load("./model2021-07-06 20:41:56.186306.idk"))
+    net.eval()
+
+    ds = SoccerFieldDataset('./data/dataset/train/', transform)
 
     print(ds.__len__())
 
@@ -62,8 +69,19 @@ if __name__ == "__main__":
     for i in range(20):
         idx = random.randint(0, ds.__len__())
         img, lbl = ds.__getitem__(idx)
-        ax[i//5,i%5].imshow(img)
-        ax[i//5,i%5].title.set_text(f'{lbl}')
+        imgo = img.cpu().permute(1,2,0).numpy()
+        ##
+        # img = cv2.resize(img, (50, 100))
+        # img = np.float64(img/255)
+        # img = transform(img)
+        img = img.reshape(1, 3, 100, 50).double().to(device)
+        # img = img.permute(0, 3, 1, 2).double().to(device)
+        output = net(img)
+    ##
+        ax[i//5,i%5].imshow(imgo)
+        ax[i//5,i%5].title.set_text(f'{lbl}/{float(output)}')
         ax[i//5,i%5].axis('off')
     
     plt.show()
+
+    torch.cuda.empty_cache()

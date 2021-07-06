@@ -17,8 +17,8 @@ class Net(nn.Module):
         self.conv1 = nn.Conv2d(3, 6, 5)
         self.pool = nn.MaxPool2d(2, 2)
         self.conv2 = nn.Conv2d(6, 16, 5)
-        self.fc1 = nn.Linear(3168, 120)
-        self.fc2 = nn.Linear(120, 40)
+        self.fc1 = nn.Linear(3168, 520)
+        self.fc2 = nn.Linear(520, 40)
         self.fc3 = nn.Linear(40, 1)
 
     def forward(self, x):
@@ -26,12 +26,12 @@ class Net(nn.Module):
         x = self.pool(F.relu(self.conv2(x))).to(device)
         x = torch.flatten(x, 1).to(device) # flatten all dimensions except batch
         x = F.relu(self.fc1(x)).to(device)
-        x = F.relu(self.fc2(x)).to(device)
-        x = F.sigmoid(self.fc3(x).to(device))
+        x = torch.sigmoid(self.fc2(x)).to(device)
+        x = torch.sigmoid(self.fc3(x).to(device))
         return x
 
 
-transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+transform = transforms.Compose([transforms.ToTensor()])#, transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
 
 if __name__ == "__main__":
@@ -45,7 +45,7 @@ if __name__ == "__main__":
                                             shuffle=True, num_workers=2)
 
     testset = ds.SoccerFieldDataset('./data/dataset/test/', transform=transform)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
+    testloader = torch.utils.data.DataLoader(testset, batch_size=1,
                                             shuffle=False, num_workers=2)
 
 
@@ -57,7 +57,7 @@ if __name__ == "__main__":
 
     # criterion = nn.CrossEntropyLoss()
     criterion = nn.MSELoss()
-    optimizer = optim.SGD(net.parameters(), lr=0.01, momentum=0.9)
+    optimizer = optim.SGD(net.parameters(), lr=0.1, momentum=0.05)
 
 
     for epoch in range(10):  # loop over the dataset multiple times
@@ -68,7 +68,8 @@ if __name__ == "__main__":
         for i, data in enumerate(trainloader, 0):
             # get the inputs; data is a list of [inputs, labels]
             inputs, labels = data
-            inputs = inputs.permute(0, 3, 1, 2).to(device)
+            # inputs = inputs.permute(0, 3, 1, 2).to(device)
+            inputs = inputs.to(device)
             labels = labels.reshape((-1,1)).double().to(device)
         
             # zero the parameter gradients
@@ -94,22 +95,28 @@ if __name__ == "__main__":
 
         # test
         loss_test = 0 
+        num = 0
         for i, data in enumerate(testloader, 0):
             # get the inputs; data is a list of [inputs, labels]
             inputs, labels = data
             # print(inputs.shape)
-            inputs = inputs.permute(0, 3, 1, 2).to(device)
+            # inputs = inputs.permute(0, 3, 1, 2).to(device)
+            inputs = inputs.to(device)
             labels = labels.reshape((-1,1)).double().to(device)
             
             # forward 
             outputs = net(inputs)
+            if outputs > 0.5 and labels == 1:
+                num += 1
+            if outputs < 0.5 and labels == 0:
+                num += 1
             
             loss = criterion(outputs, labels)
             loss_test += loss.item()
         
         print('>>>> epoch: %d, test _loss: %.6f' %
                     (epoch + 1, loss_test / testloader.__len__() ))
-
+        print(f"acc= {num/testloader.__len__() *100 }")
         
 
     from datetime import datetime as dt
@@ -117,3 +124,37 @@ if __name__ == "__main__":
 
     print('Finished Training')
     torch.cuda.empty_cache()
+
+
+    # import random 
+    # import matplotlib.pyplot as plt
+    # import cv2
+    # import numpy as np
+    # dss = ds.SoccerFieldDataset('./data/dataset/train/', transform)
+
+    # print(dss.__len__())
+
+    # # d0, l0 = ds.__getitem__(0)
+    # # d1, l1 = ds.__getitem__(175)
+    # # d2, l2 = ds.__getitem__(187)
+
+    # f, ax = plt.subplots(4,5)
+
+    # for i in range(20):
+    #     idx = random.randint(0, dss.__len__())
+    #     img, lbl = dss.__getitem__(idx)
+    #     imgo = img.cpu().permute(1,2,0).numpy()
+    #     ##
+    #     # img = cv2.resize(img, (50, 100))
+    #     # img = np.float64(img/255)
+    #     # img = transform(img)
+    #     img = img.reshape(1, 3, 100, 50).double().to(device)
+    #     # img = img.permute(0, 3, 1, 2).double().to(device)
+    #     output = net(img)
+    # ##
+    #     ax[i//5,i%5].imshow(imgo)
+    #     ax[i//5,i%5].title.set_text(f'{lbl}/{float(output)}')
+    #     ax[i//5,i%5].axis('off')
+    
+    # plt.show()
+    # torch.cuda.empty_cache()
