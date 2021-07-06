@@ -32,7 +32,7 @@ while True:
     n, stats = utils.CP_analysis(preproc_img)
 
     # save each player (patch) + label
-    if (num_frames) % 20 == 0:
+    if (num_frames) % 10 == 0:
         for i in range(1, n):
             alpha = stats[i][1] / utils.output_size[1]
             if stats[i][4] > 500 - 300*(alpha**2): # area of CP
@@ -40,30 +40,29 @@ while True:
                 
                 color = "idk"
                 hsv = cv2.cvtColor(ppatch, cv2.COLOR_BGR2HSV)
-                lr = np.array([0,10,10])
+                lr = np.array([0,5,10])
                 ur = np.array([25,255,255])
-                lb = np.array([85,0,0])
-                ub = np.array([120,255,255])
+                lb = np.array([88,5,5])
+                ub = np.array([110,255,225])
                 mask1 = cv2.inRange(hsv, lr, ur)
                 mask2 = cv2.inRange(hsv, lb, ub)
                 ms1 = np.sum(mask1 == 255)
                 ms2 = np.sum(mask2 == 255)
-                if ms1<20 and ms2<20:
-                    break
-                if ms1 > ms2:
-                    color = "r"
-                else:
-                    color = 'b'
+                if abs(ms1-ms2) > 15:
+                    if ms1 > ms2:
+                        color = "r"
+                        cv2.imwrite(f'./data/1/{num_frames}_{i}_{color}.jpg', ppatch)
+                    else:
+                        color = 'b'
+                        cv2.imwrite(f'./data/2/{num_frames}_{i}_{color}.jpg', ppatch)
 
-                print(cv2.imwrite(f'./data/{num_frames}_{i}_{color}.jpg', ppatch)       )
-            
     # Display some images
-    cv2.imshow('win1', I)
-    cv2.imshow('win2', proj_img)
-    cv2.imshow('dilate(E)', preproc_img)
+    # cv2.imshow('win1', I)
+    # cv2.imshow('win2', proj_img)
+    # cv2.imshow('dilate(E)', preproc_img)
     # cv2.imshow('2D_field', F_circle[::2, ::2])
 
-    key = cv2.waitKey(mspf//15+3) 
+    key = cv2.waitKey(1) 
 
     if key & 0xFF == ord('q'): 
         break
