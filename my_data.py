@@ -33,9 +33,6 @@ class SoccerFieldDataset(Dataset):
         image = cv2.imread(img_path)
         image = cv2.resize(image, (50, 100))
         image = np.float64(image/255)
-        # image = torch.from_numpy(image).long()
-        
-        # sample = {'image': image, 'tag': label}
 
         if self.transform:
             image = self.transform(image)
@@ -53,35 +50,28 @@ if __name__ == "__main__":
 
 
     net = Net().double().to(device)
-    net.load_state_dict(torch.load("./model2021-07-06 20:41:56.186306.idk"))
+    net.load_state_dict(torch.load("./model2021-07-11 12:49:42.889119.idk"))
     net.eval()
 
-    ds = SoccerFieldDataset('./data/dataset/train/', transform)
+    ds = SoccerFieldDataset('./data/dataset/test/', transform)
 
-    print(ds.__len__())
+    print("dataset len:", ds.__len__())
 
-    # d0, l0 = ds.__getitem__(0)
-    # d1, l1 = ds.__getitem__(175)
-    # d2, l2 = ds.__getitem__(187)
+    w, h = 10, 4
+    f, ax = plt.subplots(h, w)
 
-    f, ax = plt.subplots(4,5)
-
-    for i in range(20):
+    for i in range(w*h):
         idx = random.randint(0, ds.__len__())
         img, lbl = ds.__getitem__(idx)
-        imgo = img.cpu().permute(1,2,0).numpy()
-        ##
-        # img = cv2.resize(img, (50, 100))
-        # img = np.float64(img/255)
-        # img = transform(img)
+        imgo = img.cpu().permute(1, 2, 0).numpy()
+        
         img = img.reshape(1, 3, 100, 50).double().to(device)
-        # img = img.permute(0, 3, 1, 2).double().to(device)
+    
         output = net(img)
-    ##
-        ax[i//5,i%5].imshow(imgo)
-        ax[i//5,i%5].title.set_text(f'{lbl}/{float(output)}')
-        ax[i//5,i%5].axis('off')
+    
+        ax[i//w,i%w].imshow(imgo)
+        ax[i//w,i%w].title.set_text(f'{lbl}/{float(output):.4f}')
+        ax[i//w,i%w].axis('off')
     
     plt.show()
-
     torch.cuda.empty_cache()
