@@ -9,12 +9,9 @@ import torch
 import utils
 from train_nn import Net, transform, device
 
-
 net = Net().double().to(device)
 net.load_state_dict(torch.load("./model2021-07-11 13:05:41.314871.idk"))
 net.eval()
-# torch.no_grad()
-        
 
 # create a VideoCapture object
 cap = cv2.VideoCapture('../output.mp4')
@@ -41,51 +38,35 @@ while True:
 
     # apply connected components Alg and find foot position:
     n, stats = utils.CP_analysis(preproc_img)
-    # foots = []
-    poss = []
-    patches = torch.zeros(1, 3, 100, 50).to(device)
+    foots = []
     for i in range(1, n):
         alpha = stats[i][1] / utils.output_size[1]
         if stats[i][4] > 500 - 300*(alpha**2): # area of CP
             ppatch = proj_img[stats[i][1]:stats[i][1]+stats[i][3] ,stats[i][0]:stats[i][0]+stats[i][2]]
-            cv2.imshow("ppatch", ppatch)
             ppatch = cv2.resize(ppatch, (50, 100))
-            cv2.imshow("RRppatch", ppatch)
+            r_patch = cv2.resize(ppatch, (150, 300)) 
             ppatch = np.float64(ppatch/255)
             ppatch = transform(ppatch)
             ppatch = ppatch.reshape(1, 3, 100, 50).double().to(device)
 
-            patches = torch.vstack((patches, ppatch))
-
-            # output = net(ppatch)
-            # print(output)
+            output = net(ppatch)
+            
             x = stats[i][0] + stats[i][2]//2
             y = stats[i][1] + stats[i][3]
-            poss.append((x, y))
-            # if output > 0.8:
-            #     color = [255, 0, 0]
-            #     foots.append({'pos': (x, y), 'color': color})
-            # elif output < 0.2:
-            #     color = [0, 0, 255]
-            #     foots.append({'pos': (x, y), 'color': color})
-            # else:
-            #     color = [0, 255, 0]
-            #     foots.append({'pos': (x, y), 'color': color})
-    
-    patches = patches[1:]
-    output = net(patches)
-    foots = [] 
-    for i, pos in enumerate(poss):
-        o = output[i]
-        if o > 0.8:
-            color = [255, 0, 0]
-            foots.append({'pos': pos, 'color': color})
-        elif o < 0.2:
-            color = [0, 0, 255]
-            foots.append({'pos': pos, 'color': color})
-        else:
-            color = [0, 255, 0]
-            foots.append({'pos': pos, 'color': color})
+            
+            if output > 0.9:
+                color = [255, 0, 0]
+                foots.append({'pos': (x, y), 'color': color})
+            elif output < 0.1:
+                color = [0, 0, 255]
+                foots.append({'pos': (x, y), 'color': color})
+            else:
+                color = [0, 255, 0]
+                foots.append({'pos': (x, y), 'color': color})
+
+        # cv2.putText(r_patch, f"{float(output):.3f}", (1,30), \
+        #         cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 3)
+        # cv2.imshow(f"R_ppatch", r_patch)
 
     # draw circles on foot steps:
     Field_circle = np.array(utils.F)
@@ -95,7 +76,7 @@ while True:
         
     
     # Display some images
-    cv2.imshow('win1', I)
+    # cv2.imshow('win1', I)
     cv2.imshow('win2', proj_img)
     cv2.imshow('2D_field', Field_circle[::2, ::2])
 
@@ -105,7 +86,9 @@ while True:
         break
 
 
-print("#frames: " + str(num_frames) + " elapsed time: " + str(time.time() - t))
+t_elapsed = time.time() - t
+print(f"#frames: {num_frames}, elapsed time: {t_elapsed:.2f}, fps: {(num_frames/t_elapsed):.2f}" )
+
 cap.release()
 cv2.destroyAllWindows()
 torch.cuda.empty_cache()
