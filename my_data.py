@@ -50,7 +50,7 @@ if __name__ == "__main__":
 
 
     net = Net().double().to(device)
-    net.load_state_dict(torch.load("./model2021-07-11 12:49:42.889119.idk"))
+    net.load_state_dict(torch.load("./model2021-07-11 13:05:41.314871.idk"))
     net.eval()
 
     ds = SoccerFieldDataset('./data/dataset/test/', transform)
