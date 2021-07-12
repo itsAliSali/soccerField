@@ -14,7 +14,7 @@ The input videos are from [Soccer video and player position dataset](https://dl.
 # output
 Here is an image of top view of the field with a rendered map of players position:
 <br>
-<img src="https://github.com/itsAliSali/soccerField/blob/90423d95d6fad78ec0b7c128439ff070368d17b2/figures/outputs.png" width="500" height="500">
+<img src="https://github.com/itsAliSali/soccerField/blob/90423d95d6fad78ec0b7c128439ff070368d17b2/figures/outputs.png" width="650" height="500">
 
 # dataset
 I automatically generated the patches of players and labeled them by checking the color by openCV. Here is a figure containing 40 patches (from test dataset) and label/prediction as the title:
